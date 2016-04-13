@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "bootstrap/fixes.html" as fixes %}
+{% import "bootstrap/utils.html" as util %}
+{% block title %}Donor list{% endblock %}
+{% block head %}
+  {{ super() }}
+  <style type="text/css">
+    .important { color: #336699; }
+  </style>
+{% endblock %}
+{% block content  %}
+{{util.flashed_messages(dismissible=True)}}
+
+
+
+
+<div class="container">
+  <div class="row">
+  <div class='col-sm-6'>
+  <h1>New donation</h1>
+  {{ wtf.quick_form(form, form_type='horizontal', horizontal_columns = ('lg', 2, 10), action="")}}
+  </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts  %}
+{{super()}}
+
+			<script src="/static/js/moment-with-locales.js"></script>
+			<script src="/static/js/bootstrap-datetimepicker.js"></script>
+      <link rel="stylesheet" href="/static/css/bootstrap-datetimepicker.css" />
+<script type="text/javascript">
+            $(function () {
+               $("input[id*='_time']").each(function (i, el) {
+                  $(el).datetimepicker({
+                  locale: 'en-gb',
+                  sideBySide: true,
+                })
+              });
+                
+            });
+        </script>
+        {% endblock %}
