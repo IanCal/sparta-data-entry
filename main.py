@@ -4,6 +4,7 @@ from datetime import datetime
 from flask import Flask, render_template, request, redirect
 from random import getrandbits
 from decimal import Decimal
+from shutil import copy2
 from time import time
 import decimal
 import os
@@ -15,6 +16,8 @@ from flask_wtf import Form
 from wtforms import StringField, IntegerField, SubmitField, TextField, FormField, DecimalField
 from wtforms.validators import DataRequired, NumberRange
 from wtforms_components import DateTimeField
+
+from flask_wtf.file import FileField
 
 import wtforms_json
 
@@ -65,6 +68,7 @@ CsrfProtect(app)
 Bootstrap(app)
 
 def wtforms_json_handler(obj):
+
     if hasattr(obj, 'strftime'):
         return obj.strftime(DATE_FORMAT)
     if type(obj) == type(Decimal()):
@@ -105,18 +109,29 @@ class Donor(Form):
     motility_pbs = FormField(Motility)
     start_time = DateTimeField('Start',format='%d/%m/%Y %H:%M')
     end_time = DateTimeField('End',format='%d/%m/%Y %H:%M')
+    raw_spectra = FileField('Raw spectra')
+    matlab_spectra = FileField('ML spectra')
     submit_button = SubmitField('Submit Form')
 
 
 def write_donor(form):
     donor_id = form.donor_id.data
+    current_time = int(time())
     previous_path = joinpath("data", "donors", donor_id, "previous")
     if not os.path.exists(previous_path):
         os.makedirs(previous_path)
     path = joinpath("data", "donors", donor_id)
+    for upload, name in [(form.raw_spectra.data, 'raw_spectra'),
+                    (form.matlab_spectra.data, 'matlab_spectra')]:
+        if len(upload.filename) > 0:
+            upload.save(joinpath(path, "%s.raw" % name))
+            copy2(joinpath(path, "%s.raw" % name), joinpath(previous_path, "%d_%s.raw" % (current_time, name)))
+    form.raw_spectra.data = None
+    form.matlab_spectra.data = None
+
     filename = joinpath(path, "donor_data.json")
     for filename in [joinpath(path, "donor_data.json"),
-                     joinpath(previous_path, "%d.json" % int(time()))]:
+                     joinpath(previous_path, "%d.json" % current_time)]:
         with open(filename, "w+") as f_out:
             json.dump(form.data, f_out, default=wtforms_json_handler)
 
