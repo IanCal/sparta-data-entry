@@ -7,6 +7,21 @@
   {{ super() }}
   <style type="text/css">
     .important { color: #336699; }
+
+fieldset {
+    border: 1px groove #ddd !important;
+    padding: 0 0.4em 0.4em 0.4em !important;
+    margin: 0 0 1.5em 0 !important;
+    -webkit-box-shadow:  0px 0px 0px 0px #000;
+            box-shadow:  0px 0px 0px 0px #000;
+}
+
+legend {
+    width:inherit; /* Or auto */
+    padding:0 10px; /* To give a bit of padding on the left and right */
+    border-bottom:none;
+}
+
   </style>
 {% endblock %}
 {% block content  %}
@@ -17,11 +32,12 @@
 
 <div class="container">
   <div class="row">
-  <div class='col-sm-6'>
+  <div class='col-sm-12'>
   <h1>New donation</h1>
-  {{ wtf.quick_form(form, form_type='horizontal', horizontal_columns = ('lg', 2, 10), action="")}}
+  {{ wtf.quick_form(form, form_type='horizontal', enctype="multipart/form-data", horizontal_columns = ('lg', 3, 9), action="")}}
   </div>
   </div>
+
 </div>
 {% endblock %}
 {% block scripts  %}
@@ -32,6 +48,10 @@
       <link rel="stylesheet" href="/static/css/bootstrap-datetimepicker.css" />
 <script type="text/javascript">
             $(function () {
+              $($("fieldset fieldset")[0]).wrap( "<div class='col-sm-6'></div>" );
+              $($("fieldset fieldset")[1]).wrap( "<div class='col-sm-6'></div>" );
+              $($("fieldset")[5].children[1]).wrap( "<div class='col-sm-6'></div>" );
+              $($("fieldset")[5].children[2]).wrap( "<div class='col-sm-6'></div>" );
                $("input[id*='_time']").each(function (i, el) {
                   $(el).datetimepicker({
                   locale: 'en-gb',
