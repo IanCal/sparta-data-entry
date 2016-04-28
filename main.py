@@ -79,6 +79,23 @@ def wtforms_json_handler(obj):
 
 # Donors
 
+def all_set(d):
+    for k, v in d.items():
+        if k.endswith("_spectra"):
+            continue
+        if v is None:
+            return False
+        if isinstance(v, dict):
+            if not all_set(v):
+                return False
+    return True
+
+def check_status(data):
+    return [("Initial evaluation", all_set(data["initial_evaluation"])),
+            ("Interface pellet", all_set(data["pellets"]["interface"])),
+            ("80% pellet", all_set(data["pellets"]["eighty_percent"])),
+            ]
+
 def get_all_donors():
     donor_list = []
     path = joinpath("data", "donors")
@@ -86,8 +103,9 @@ def get_all_donors():
         os.makedirs(path)
     for entry in os.scandir(joinpath("data", "donors")):
         if entry.is_dir():
-            print(entry)
-            donor_list.append(json.load(open(joinpath(entry.path, "donor_data.json"))))
+            data = json.load(open(joinpath(entry.path, "donor_data.json")))
+            data["status"] = check_status(data)
+            donor_list.append(data)
     return donor_list
 
 
@@ -118,11 +136,23 @@ class Duration(Form):
     start_time = DateTimeField('Start time',format='%d/%m/%Y %H:%M', validators=[Optional()])
     end_time = DateTimeField('End time',format='%d/%m/%Y %H:%M', validators=[Optional()])
 
+class Scan(Duration):
+    scan_type = SelectField('Scan type', choices=[
+                                                    ('proton', 'Proton'),
+                                                    ('glucose_13cu', 'Glucose 13Cu'),
+                                                    ('fructose_13cu', 'Fructose 13Cu'),
+                                                    ('pyruvate_13c1', 'Pyruvate 13C1'),
+                                                    ('pyruvate_13c2', 'Pyruvate 13C2'),
+                                                    ('glucose_13cu_pyruvate_13c1', 'Glucose 13Cu & Pyruvate 13C1'),
+                                                    ('glucose_13C1_6_pyruvate_13c2', 'Glucose 13Cu & Pyruvate 13C2'),
+                                                    ('hydroxybutyrate', 'Hydroxybutyrate'),
+                                                 ])
+
 class Pellet(Form):
     t0 = FormField(T0)
     leukocyte_ratio_to_sperm = BetterDecimalField(places=2, validators=[Optional()])
     t3 = FormField(T3)
-    scan_time = FormField(Duration, "Proton scan")
+    scan_time = FormField(Scan, "Scan")
     raw_spectra = FileField('Raw spectra')
     matlab_spectra = FileField('ML spectra')
 
@@ -221,6 +251,10 @@ def edit_donor(donor_id):
         donation = json.load(open(filename))
         form = Donor.from_json(donation)
     return render_template('new_donor.html', form=form)
+
+@app.route('/')
+def root():
+    return redirect('/donors/')
 
 if __name__ == '__main__':
     app.run(debug=True)

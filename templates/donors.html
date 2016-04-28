@@ -1,5 +1,5 @@
 {% extends "layout.html" %}
-{% block title %}Donor list{% endblock %}
+{% block title %}Donors{% endblock %}
 {% block head %}
   {{ super() }}
   <style type="text/css">
@@ -7,14 +7,35 @@
   </style>
 {% endblock %}
 {% block content %}
-  <h1>Donor list</h1>
-  <a href="{{ url_for('new_donor') }}">Create a new donor</a>
+<div class="container">
+  <div class="row">
+    <div class='col-sm-12'>
+      <h1>Donors</h1>
+      <a class="btn btn-primary" href="{{ url_for('new_donor') }}">Create a new donor</a>
+    </div>
+  </div>
   {% for donor in donors %}
-    <div>
-      <a href="{{ url_for('edit_donor', donor_id=donor["donor_id"]) }}">
-      	{{ donor["donor_id"] }}
-      </a>
 
-	</div>
+  <div class="row">
+    <div class="col-sm-12">
+      <div class="panel panel-default">
+        <div class="panel-heading">Donor ID: {{ donor["donor_id"] }}</div>
+          <div class="panel-body">
+           <ol>
+           {% for label, completed in donor["status"] %}
+              {% if completed %}
+                <li><del>{{ label }}</del></li>
+              {% else %}
+                <li>{{ label }}</li>
+              {% endif %}
+           {% endfor %}
+           </ol>
+           <a href="{{ url_for('edit_donor', donor_id=donor["donor_id"]) }}">Edit this donor</a>
+          </div>
+        </div>
+      </div>
+    </div>
   {% endfor %}
+
+</div>
 {% endblock %}
