@@ -13,8 +13,8 @@ import json
 from time import time
 from wtforms_components import read_only
 from flask_wtf import Form
-from wtforms import StringField, IntegerField, SubmitField, TextField, FormField, DecimalField
-from wtforms.validators import DataRequired, NumberRange
+from wtforms import StringField, IntegerField, SubmitField, TextField, FormField, DecimalField, SelectField, TextAreaField
+from wtforms.validators import DataRequired, NumberRange, Optional
 from wtforms_components import DateTimeField
 
 from flask_wtf.file import FileField
@@ -23,6 +23,7 @@ import wtforms_json
 
 
 from wtforms import DecimalField
+
 
 
 class BetterDecimalField(DecimalField):
@@ -97,22 +98,78 @@ def donor_list():
 # Donations
 
 class Motility(Form):
-    a = BetterDecimalField('a', places=2, validators=[DataRequired(), NumberRange(0,100)])
-    b = IntegerField('b', validators=[DataRequired(), NumberRange(0,100)])
-    c = IntegerField('c', validators=[DataRequired(), NumberRange(0,100)])
-    d = IntegerField('d', validators=[DataRequired(), NumberRange(0,100)])
+    a = BetterDecimalField(label="FP (a) %", places=2, validators=[Optional(), NumberRange(0,100)])
+    b = BetterDecimalField(label="SP (b) %", places=2, validators=[Optional(), NumberRange(0,100)])
+    c = BetterDecimalField(label="NP (c) %", places=2, validators=[Optional(), NumberRange(0,100)])
+    d = BetterDecimalField(label="IM (d) %", places=2, validators=[Optional(), NumberRange(0,100)])
+    concentration = BetterDecimalField(label="Concentration (10^6/ml)", places=2, validators=[Optional(), NumberRange(0,100)])
 
-class Donor(Form):
-    donor_id = StringField('donor_id', validators=[DataRequired()])
-    counts = IntegerField('counts', validators=[DataRequired(), NumberRange(1,100)])
-    volume = IntegerField('volume', validators=[DataRequired(), NumberRange(1,100)])
-    motility_pbs = FormField(Motility)
-    start_time = DateTimeField('Start',format='%d/%m/%Y %H:%M')
-    end_time = DateTimeField('End',format='%d/%m/%Y %H:%M')
+class T0(Form):
+    pbs = FormField(Motility)
+    wash = FormField(Motility)
+
+class T3(T0):
+    ph_10 =  BetterDecimalField("pH 10", places=2, validators=[Optional()])
+    ph_7 =  BetterDecimalField("pH 7", places=2, validators=[Optional()])
+    ph_4 =  BetterDecimalField("pH 4", places=2, validators=[Optional()])
+
+
+class Duration(Form):
+    start_time = DateTimeField('Start time',format='%d/%m/%Y %H:%M', validators=[Optional()])
+    end_time = DateTimeField('End time',format='%d/%m/%Y %H:%M', validators=[Optional()])
+
+class Pellet(Form):
+    t0 = FormField(T0)
+    leukocyte_ratio_to_sperm = BetterDecimalField(places=2, validators=[Optional()])
+    t3 = FormField(T3)
+    scan_time = FormField(Duration, "Proton scan")
     raw_spectra = FileField('Raw spectra')
     matlab_spectra = FileField('ML spectra')
-    submit_button = SubmitField('Submit Form')
 
+
+class InitialEvaluation(Form):
+
+    sample_prep_duration = FormField(Duration, label="Sample Prep")
+    analysis_duration = FormField(Duration, label="Analysis")
+    volume = BetterDecimalField(label="Volume", places=2, validators=[Optional()])
+    ph = BetterDecimalField(label="pH", places=1, validators=[Optional()])
+    viscosity = SelectField(choices=[('normal', 'Normal'),
+                                         ('high', 'High'),
+                                         ])
+    agglutination = SelectField(choices=[('none', 'None'),
+                                         ('isolated', 'Isolated'),
+                                         ('moderate', 'Moderate'),
+                                         ('widespread', 'Widespread'),
+                                         ('gross', 'Gross'),
+                                         ])
+    agglutination_type = SelectField(choices=[('none', 'None'),
+                                         ('head', 'Head - Head'),
+                                         ('tail', 'Tail - Tail'),
+                                         ('mixed', 'Mixed'),
+                                         ('tangle', 'Tangle'),
+                                         ('tail_tip', 'Tail tip - Tail tip'),
+                                         ])
+    comments = TextAreaField()
+    andrology_motility = FormField(Motility, label="Andrology Motility")
+    casa_motility = FormField(Motility, label="CASA Motility")
+
+class Pellets(Form):
+    eighty_percent = FormField(Pellet, label="80% Pellet")
+    interface = FormField(Pellet, label="80/40 Interface Pellet")
+    
+
+class Donor(Form):
+
+    donor_id = StringField('Donor ID', validators=[DataRequired()])
+    donation_time =  DateTimeField('Donation Time',format='%d/%m/%Y %H:%M', validators=[Optional()])
+
+    abstinence = IntegerField('Days of abstinence', validators=[Optional(), NumberRange(0, 100000)])
+    method = SelectField('Method of production', choices=[('home', 'Masturbation at home'), ('office', 'Masturbation at office')])
+    
+    initial_evaluation = FormField(InitialEvaluation, label="Initial evaluation")
+    pellets = FormField(Pellets)
+
+    submit_button = SubmitField('Submit Form')
 
 def write_donor(form):
     donor_id = form.donor_id.data
@@ -121,19 +178,28 @@ def write_donor(form):
     if not os.path.exists(previous_path):
         os.makedirs(previous_path)
     path = joinpath("data", "donors", donor_id)
-    for upload, name in [(form.raw_spectra.data, 'raw_spectra'),
-                    (form.matlab_spectra.data, 'matlab_spectra')]:
+    for pellet_type in ['interface', 'eighty_percent']:
+        pellet_path = joinpath(path, pellet_type, 'previous')
+        if not os.path.exists(pellet_path):
+            os.makedirs(pellet_path)
+
+    for upload, pellet, name in [(form.pellets.interface.raw_spectra.data, 'interface', 'raw_spectra'),
+                                 (form.pellets.interface.matlab_spectra.data, 'interface', 'matlab_spectra'),
+                                 (form.pellets.eighty_percent.raw_spectra.data, 'eighty_percent', 'raw_spectra'),
+                                 (form.pellets.eighty_percent.matlab_spectra.data, 'eighty_percent', 'matlab_spectra')]:
         if len(upload.filename) > 0:
-            upload.save(joinpath(path, "%s.raw" % name))
-            copy2(joinpath(path, "%s.raw" % name), joinpath(previous_path, "%d_%s.raw" % (current_time, name)))
-    form.raw_spectra.data = None
-    form.matlab_spectra.data = None
+            upload.save(joinpath(path, pellet, "%s.raw" % name))
+            copy2(joinpath(path, pellet, "%s.raw" % name), joinpath(path, pellet, 'previous', "%d_%s.raw" % (current_time, name)))
+    form.pellets.interface.raw_spectra.data = None
+    form.pellets.interface.matlab_spectra.data = None
+    form.pellets.eighty_percent.raw_spectra.data = None
+    form.pellets.eighty_percent.matlab_spectra.data = None
 
     filename = joinpath(path, "donor_data.json")
     for filename in [joinpath(path, "donor_data.json"),
                      joinpath(previous_path, "%d.json" % current_time)]:
         with open(filename, "w+") as f_out:
-            json.dump(form.data, f_out, default=wtforms_json_handler)
+            json.dump(form.data, f_out, default=wtforms_json_handler, indent=4)
 
 @app.route('/donors/new', methods=('GET', 'POST'))
 def new_donor():
