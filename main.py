@@ -1,7 +1,7 @@
 from flask_wtf.csrf import CsrfProtect
 from flask.ext.bootstrap import Bootstrap
 from datetime import datetime
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, send_from_directory
 from random import getrandbits
 from decimal import Decimal
 from shutil import copy2
@@ -16,6 +16,7 @@ from flask_wtf import Form
 from wtforms import StringField, IntegerField, SubmitField, TextField, FormField, DecimalField, SelectField, TextAreaField
 from wtforms.validators import DataRequired, NumberRange, Optional
 from wtforms_components import DateTimeField
+from werkzeug import secure_filename
 
 from flask_wtf.file import FileField
 
@@ -239,6 +240,13 @@ def new_donor():
         return redirect('/donors/%s' % form.donor_id.data)
     return render_template('new_donor.html', form=form)
 
+def find_files(donor_id):
+    for pellet in ["eighty_percent", "interface"]:
+        for filename in ["matlab_spectra.raw", "raw_spectra.raw"]:
+            file_path = joinpath('data', 'donors', donor_id, pellet, filename)
+            if os.path.isfile(file_path):
+                yield (donor_id, pellet, filename)
+
 @app.route('/donors/<donor_id>', methods=('GET', 'POST'))
 def edit_donor(donor_id):
     form = Donor()
@@ -250,7 +258,19 @@ def edit_donor(donor_id):
         filename = joinpath(path, "donor_data.json")
         donation = json.load(open(filename))
         form = Donor.from_json(donation)
-    return render_template('new_donor.html', form=form)
+    return render_template('new_donor.html', form=form, files=find_files(donor_id))
+
+@app.route('/download/<donor_id>/<pellet>/<filename>')
+def custom_static(donor_id, pellet, filename):
+    path = joinpath('data', 
+                                        secure_filename(donor_id),
+                                        secure_filename(pellet))
+    print(path)
+    return send_from_directory(joinpath('data', 
+                                        'donors',
+                                        secure_filename(donor_id),
+                                        secure_filename(pellet)),
+                                        secure_filename(filename))
 
 @app.route('/')
 def root():
