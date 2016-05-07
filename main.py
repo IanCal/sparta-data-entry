@@ -107,6 +107,7 @@ def get_all_donors():
             data = json.load(open(joinpath(entry.path, "donor_data.json")))
             data["status"] = check_status(data)
             donor_list.append(data)
+    donor_list.sort(key=lambda x: x.get("updated", 0), reverse=True)
     return donor_list
 
 
@@ -145,7 +146,7 @@ class Scan(Duration):
                                                     ('pyruvate_13c1', 'Pyruvate 13C1'),
                                                     ('pyruvate_13c2', 'Pyruvate 13C2'),
                                                     ('glucose_13cu_pyruvate_13c1', 'Glucose 13Cu & Pyruvate 13C1'),
-                                                    ('glucose_13C1_6_pyruvate_13c2', 'Glucose 13Cu & Pyruvate 13C2'),
+                                                    ('glucose_13C1_6_pyruvate_13c2', 'Glucose 13C1,6 & Pyruvate 13C2'),
                                                     ('hydroxybutyrate', 'Hydroxybutyrate'),
                                                  ])
 
@@ -187,7 +188,13 @@ class InitialEvaluation(Form):
 class Pellets(Form):
     eighty_percent = FormField(Pellet, label="80% Pellet")
     interface = FormField(Pellet, label="80/40 Interface Pellet")
-    
+ 
+
+
+class Questionnaire(Form):
+    ethnicity = SelectField(choices=[
+                                    ('uno','uno')
+                                    ])   
 
 class Donor(Form):
 
@@ -196,7 +203,8 @@ class Donor(Form):
 
     abstinence = IntegerField('Days of abstinence', validators=[Optional(), NumberRange(0, 100000)])
     method = SelectField('Method of production', choices=[('home', 'Masturbation at home'), ('office', 'Masturbation at office')])
-    
+    bbquestionnaire = FormField(Questionnaire, label="Questionnaire")
+
     initial_evaluation = FormField(InitialEvaluation, label="Initial evaluation")
     pellets = FormField(Pellets)
 
@@ -230,7 +238,9 @@ def write_donor(form):
     for filename in [joinpath(path, "donor_data.json"),
                      joinpath(previous_path, "%d.json" % current_time)]:
         with open(filename, "w+") as f_out:
-            json.dump(form.data, f_out, default=wtforms_json_handler, indent=4)
+            data= form.data
+            data["updated"] = current_time
+            json.dump(data, f_out, default=wtforms_json_handler, indent=4)
 
 @app.route('/donors/new', methods=('GET', 'POST'))
 def new_donor():
@@ -272,9 +282,35 @@ def custom_static(donor_id, pellet, filename):
                                         secure_filename(pellet)),
                                         secure_filename(filename))
 
+def add_duration(durations, elem):
+    start = elem["start_time"]
+    end = elem["end_time"]
+    if start is not None and end is not None:
+        start = datetime.strptime(start, DATE_FORMAT)
+        end = datetime.strptime(end, DATE_FORMAT)
+        durations.append((end - start).total_seconds() / 60)
+
+
 @app.route('/')
 def root():
-    return redirect('/donors/')
+    all_donors = get_all_donors()
+    sample_prep_durations = []
+    analysis_durations = []
+    scan_durations = []
+    for donor in all_donors:
+        add_duration(sample_prep_durations, donor["initial_evaluation"]["sample_prep_duration"])
+        add_duration(analysis_durations, donor["initial_evaluation"]["analysis_duration"])
+        for pellet in ["eighty_percent", "interface"]:
+            add_duration(scan_durations, donor["pellets"][pellet]["scan_time"])
+    return render_template('index.html',
+        donors=all_donors,
+        total_donors=len(all_donors),
+        timing_histograms=
+        [
+            ('Sample prep', json.dumps(sample_prep_durations), 'sample_prep'),
+            ('Initial analysis', json.dumps(analysis_durations), 'analysis'),
+            ('Scans', json.dumps(scan_durations), 'scans'),
+        ])
 
 if __name__ == '__main__':
     app.run(debug=True)
