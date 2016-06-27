@@ -13,7 +13,7 @@ import json
 from time import time
 from wtforms_components import read_only
 from flask_wtf import Form
-from wtforms import StringField, IntegerField, SubmitField, TextField, FormField, DecimalField, SelectField, TextAreaField
+from wtforms import StringField, widgets, IntegerField, RadioField, SelectMultipleField, SubmitField, TextField, FormField, DecimalField, SelectField, TextAreaField
 from wtforms.validators import DataRequired, NumberRange, Optional
 from wtforms_components import DateTimeField
 from werkzeug import secure_filename
@@ -25,6 +25,15 @@ import wtforms_json
 
 from wtforms import DecimalField
 
+class MultiCheckboxField(SelectMultipleField):
+    """
+    A multiple-select, except displays a list of checkboxes.
+
+    Iterating the field will produce subfields, allowing custom rendering of
+    the enclosed checkbox fields.
+    """
+    widget = widgets.ListWidget(prefix_label=False)
+    option_widget = widgets.CheckboxInput()
 
 
 class BetterDecimalField(DecimalField):
@@ -192,9 +201,60 @@ class Pellets(Form):
 
 
 class Questionnaire(Form):
-    ethnicity = SelectField(choices=[
-                                    ('uno','uno')
-                                    ])   
+    age = IntegerField('What is your age', validators=[Optional(), NumberRange(0, 100)])
+    abstained = IntegerField('How long have you abstained in days', validators=[Optional(), NumberRange(0, 1000)])
+
+    ethnicity = SelectField(label='Ethnicity', choices=[
+                                    ('white','White'),
+                                    ('mixed','Mixed'),
+                                    ('asian_asian_british','Asian or Asian British'),
+                                    ('black_black_british','Black or Black British'),
+                                    ('chinese_chinese_british','Chinese or Chinese British'),
+                                    ('other','Other')
+                                    ])
+    height = BetterDecimalField('Height (m)', places=2, validators=[Optional()])
+    weight = BetterDecimalField('Weight (kg)', places=2, validators=[Optional()])
+    vasectomy = SelectField('Have you had a vasectomy?', default=None, choices=[
+                                    ('yes','Yes'),
+                                    ('no','No'),
+                                    ])
+    conceived = SelectField('Have you conceived previously?', choices=[
+                                    ('yes','Yes'),
+                                    ('no','No'),
+                                    ])
+    bloodborne_disease = SelectField('Have you tested positive for a blood borne disease (e.g. HIV or Hepatitis)?', choices=[
+                                    ('yes','Yes'),
+                                    ('no','No'),
+                                    ])
+    sti = SelectField('Are you aware that you currently have a Sexually Transmitted Infection? (e.g.chlamydia)', choices=[
+                                    ('yes','Yes'),
+                                    ('no','No'),
+                                    ])
+    medications = TextAreaField('Which medications have you taken in the past 3 months?')
+    cancer = SelectField('Have you received treatment for cancer within the 2 past years?', choices=[
+                                    ('yes','Yes'),
+                                    ('no','No'),
+                                    ])
+    supplements = TextAreaField('Are you taking any dietary supplements or multivitamins? If so which ones?')
+    alcohol = SelectField('Do you drink alcohol?', choices=[
+                                    ('yes','Yes'),
+                                    ('no','No'),
+                                    ])
+
+    units = BetterDecimalField('In a typical week how many units of alcohol do you consume?', places=2, validators=[Optional()])
+    tobacco = SelectField('Do you smoke tobacco?', choices=[
+                                    ('yes','Yes'),
+                                    ('no','No'),
+                                    ])
+    smokes = BetterDecimalField('In a typical day how many cigarettes/ cigars/ pipes do you smoke?', places=2, validators=[Optional()])
+    smoking_type = RadioField( choices=[
+                                    ('cigarettes','Cigarettes'),
+                                    ('cigars','Cigars'),
+                                    ('pipes','Pipes'),
+                                    ])
+    more_information = TextAreaField('More information')
+    
+
 
 class Donor(Form):
 
@@ -313,4 +373,4 @@ def root():
         ])
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=True)
