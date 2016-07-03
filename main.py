@@ -287,8 +287,8 @@ def write_donor(form):
                                  (form.pellets.eighty_percent.raw_spectra.data, 'eighty_percent', 'raw_spectra'),
                                  (form.pellets.eighty_percent.matlab_spectra.data, 'eighty_percent', 'matlab_spectra')]:
         if len(upload.filename) > 0:
-            upload.save(joinpath(path, pellet, "%s.raw" % name))
-            copy2(joinpath(path, pellet, "%s.raw" % name), joinpath(path, pellet, 'previous', "%d_%s.raw" % (current_time, name)))
+            upload.save(joinpath(path, pellet, "%s.zip" % name))
+            copy2(joinpath(path, pellet, "%s.zip" % name), joinpath(path, pellet, 'previous', "%d_%s.zip" % (current_time, name)))
     form.pellets.interface.raw_spectra.data = None
     form.pellets.interface.matlab_spectra.data = None
     form.pellets.eighty_percent.raw_spectra.data = None
