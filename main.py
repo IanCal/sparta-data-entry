@@ -13,7 +13,7 @@ import json
 from time import time
 from wtforms_components import read_only
 from flask_wtf import Form
-from wtforms import StringField, widgets, IntegerField, RadioField, SelectMultipleField, SubmitField, TextField, FormField, DecimalField, SelectField, TextAreaField
+from wtforms import StringField, widgets, IntegerField, RadioField, SelectMultipleField, SubmitField, TextField, FormField, DecimalField, SelectField, TextAreaField, FieldList
 from wtforms.validators import DataRequired, NumberRange, Optional
 from wtforms_components import DateTimeField
 from werkzeug import secure_filename
@@ -100,6 +100,16 @@ def all_set(d):
                 return False
     return True
 
+def is_asthenozoospermic(data):
+    initial_evaluation = data["initial_evaluation"]
+    motility = initial_evaluation["andrology_motility"]
+    if motility["a"] is None or motility["a"] is None:
+        return False
+    a = float(motility["a"])
+    b = float(motility["b"])
+    return a + b < 26
+
+
 def check_status(data):
     return [("Initial evaluation", all_set(data["initial_evaluation"])),
             ("Interface pellet", all_set(data["pellets"]["interface"])),
@@ -115,6 +125,7 @@ def get_all_donors():
         if entry.is_dir():
             data = json.load(open(joinpath(entry.path, "donor_data.json")))
             data["status"] = check_status(data)
+            data["asthenozoospermic"] = is_asthenozoospermic(data)
             donor_list.append(data)
     donor_list.sort(key=lambda x: x.get("updated", 0), reverse=True)
     return donor_list
@@ -133,15 +144,22 @@ class Motility(Form):
     d = BetterDecimalField(label="IM (d) %", places=2, validators=[Optional(), NumberRange(0,100)])
     concentration = BetterDecimalField(label="Concentration (10^6/ml)", places=2, validators=[Optional(), NumberRange(0,100)])
 
+class VitalitySection(Form):
+    red = IntegerField(label="Red", validators=[Optional(), NumberRange(0,100000)])
+    green = IntegerField(label="Green", validators=[Optional(), NumberRange(0,100000)])
+
+class Vitality(Form):
+    count_1 = FormField(VitalitySection, label="Count 1")
+    count_2 = FormField(VitalitySection, label="Count 2")
+
 class T0(Form):
     pbs = FormField(Motility)
     wash = FormField(Motility)
+    vitality = FormField(Vitality)
 
-class T3(T0):
-    ph_10 =  BetterDecimalField("pH 10", places=2, validators=[Optional()])
-    ph_7 =  BetterDecimalField("pH 7", places=2, validators=[Optional()])
-    ph_4 =  BetterDecimalField("pH 4", places=2, validators=[Optional()])
-
+class Tend(Form):
+    wash = FormField(Motility)
+    vitality = FormField(Vitality)
 
 class Duration(Form):
     start_time = DateTimeField('Start time',format='%d/%m/%Y %H:%M', validators=[Optional()])
@@ -162,18 +180,22 @@ class Scan(Duration):
 class Pellet(Form):
     t0 = FormField(T0)
     leukocyte_ratio_to_sperm = BetterDecimalField(places=2, validators=[Optional()])
-    t3 = FormField(T3)
+    tend = FormField(Tend)
     scan_time = FormField(Scan, "Scan")
-    raw_spectra = FileField('Raw spectra')
-    matlab_spectra = FileField('ML spectra')
+    ph =  BetterDecimalField("pH", places=2, validators=[Optional()])
+    zip_file = FileField('Zip File')
 
 
 class InitialEvaluation(Form):
-
-    sample_prep_duration = FormField(Duration, label="Sample Prep")
+    method = SelectField('Method of production', choices=[('home', 'Masturbation at home'),
+                                                          ('office', 'Masturbation at office'),
+                                                          ('intercourse', 'Intercourse')])
     analysis_duration = FormField(Duration, label="Analysis")
+    sample_prep_duration = FormField(Duration, label="Sample Prep")
     volume = BetterDecimalField(label="Volume", places=2, validators=[Optional()])
     ph = BetterDecimalField(label="pH", places=1, validators=[Optional()])
+
+    morphology = BetterDecimalField(label="Morphology (% normal forms)", places=2, validators=[Optional()])
     viscosity = SelectField(choices=[('normal', 'Normal'),
                                          ('high', 'High'),
                                          ])
@@ -195,8 +217,10 @@ class InitialEvaluation(Form):
     casa_motility = FormField(Motility, label="CASA Motility")
 
 class Pellets(Form):
+
+    pbs_ph =  BetterDecimalField("PBS pH", places=2, validators=[Optional()])
     eighty_percent = FormField(Pellet, label="80% Pellet")
-    interface = FormField(Pellet, label="80/40 Interface Pellet")
+    interface = FormField(Pellet, label="40/80 Interface Pellet")
  
 
 
@@ -251,7 +275,7 @@ class Questionnaire(Form):
                                     ('cigarettes','Cigarettes'),
                                     ('cigars','Cigars'),
                                     ('pipes','Pipes'),
-                                    ])
+                                    ], validators=[Optional()])
     more_information = TextAreaField('More information')
     
 
@@ -262,8 +286,8 @@ class Donor(Form):
     donation_time =  DateTimeField('Donation Time',format='%d/%m/%Y %H:%M', validators=[Optional()])
 
     abstinence = IntegerField('Days of abstinence', validators=[Optional(), NumberRange(0, 100000)])
-    method = SelectField('Method of production', choices=[('home', 'Masturbation at home'), ('office', 'Masturbation at office')])
-    bbquestionnaire = FormField(Questionnaire, label="Questionnaire")
+
+    questionnaire = FormField(Questionnaire, label="Questionnaire")
 
     initial_evaluation = FormField(InitialEvaluation, label="Initial evaluation")
     pellets = FormField(Pellets)
@@ -271,6 +295,7 @@ class Donor(Form):
     submit_button = SubmitField('Submit Form')
 
 def write_donor(form):
+    print("Write donor")
     donor_id = form.donor_id.data
     current_time = int(time())
     previous_path = joinpath("data", "donors", donor_id, "previous")
@@ -282,18 +307,14 @@ def write_donor(form):
         if not os.path.exists(pellet_path):
             os.makedirs(pellet_path)
 
-    for upload, pellet, name in [(form.pellets.interface.raw_spectra.data, 'interface', 'raw_spectra'),
-                                 (form.pellets.interface.matlab_spectra.data, 'interface', 'matlab_spectra'),
-                                 (form.pellets.eighty_percent.raw_spectra.data, 'eighty_percent', 'raw_spectra'),
-                                 (form.pellets.eighty_percent.matlab_spectra.data, 'eighty_percent', 'matlab_spectra')]:
+    for upload, pellet, name in [(form.pellets.interface.zip_file.data, 'interface', 'zip_file'),
+                                 (form.pellets.eighty_percent.zip_file.data, 'eighty_percent', 'zip_file')]:
         if len(upload.filename) > 0:
             upload.save(joinpath(path, pellet, "%s.zip" % name))
             copy2(joinpath(path, pellet, "%s.zip" % name), joinpath(path, pellet, 'previous', "%d_%s.zip" % (current_time, name)))
-    form.pellets.interface.raw_spectra.data = None
-    form.pellets.interface.matlab_spectra.data = None
-    form.pellets.eighty_percent.raw_spectra.data = None
-    form.pellets.eighty_percent.matlab_spectra.data = None
-
+    form.pellets.interface.zip_file.data = None
+    form.pellets.eighty_percent.zip_file.data = None
+    print("Saving the file")
     filename = joinpath(path, "donor_data.json")
     for filename in [joinpath(path, "donor_data.json"),
                      joinpath(previous_path, "%d.json" % current_time)]:
@@ -301,6 +322,7 @@ def write_donor(form):
             data= form.data
             data["updated"] = current_time
             json.dump(data, f_out, default=wtforms_json_handler, indent=4)
+    print("Saved?")
 
 @app.route('/donors/new', methods=('GET', 'POST'))
 def new_donor():
@@ -319,7 +341,9 @@ def find_files(donor_id):
 
 @app.route('/donors/<donor_id>', methods=('GET', 'POST'))
 def edit_donor(donor_id):
+    print("EDIT DONOR")
     form = Donor()
+    print(form.validate_on_submit())
     if request.method == 'POST' and form.validate_on_submit():
         write_donor(form)
         return redirect('/donors/%s' % (donor_id))
@@ -373,4 +397,5 @@ def root():
         ])
 
 if __name__ == '__main__':
+    print("RUNNIN")
     app.run(host='0.0.0.0', port=5000, debug=True)

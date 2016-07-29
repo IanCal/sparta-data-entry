@@ -27,6 +27,9 @@ legend {
 {% block content  %}
 {{util.flashed_messages(dismissible=True)}}
 
+{% if form.errors %}
+    {{ form.errors }}
+{% endif %}
 
 
 
@@ -48,6 +51,7 @@ legend {
       {{ wtf.quick_form(form, form_type='horizontal', enctype="multipart/form-data", horizontal_columns = ('lg', 3, 9), action="")}}
     </div>
   </div>
+  
 
 </div>
 {% endblock %}
@@ -60,7 +64,7 @@ legend {
 <script type="text/javascript">
             $(function () {
               $($("fieldset fieldset")[2]).wrap( "<div class='col-sm-6'></div>" );
-              $($("fieldset fieldset")[4]).wrap( "<div class='col-sm-6'></div>" );
+              //$($("fieldset fieldset")[4]).wrap( "<div class='col-sm-6'></div>" );
               //$($("fieldset")[5].children[1]).wrap( "<div class='col-sm-6'></div>" );
               //$($("fieldset")[5].children[2]).wrap( "<div class='col-sm-6'></div>" );
                $("input[id*='_time']").each(function (i, el) {
