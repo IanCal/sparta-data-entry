@@ -176,14 +176,19 @@ class Scan(Duration):
                                                     ('glucose_13C1_6_pyruvate_13c2', 'Glucose 13C1,6 & Pyruvate 13C2'),
                                                     ('hydroxybutyrate', 'Hydroxybutyrate'),
                                                  ])
+    tend = FormField(Tend)
+    zip_file = FileField('Zip File')
 
 class Pellet(Form):
-    t0 = FormField(T0)
+    carbon_t0 = FormField(T0)
+    proton_t0 = FormField(T0)
     leukocyte_ratio_to_sperm = BetterDecimalField(places=2, validators=[Optional()])
-    tend = FormField(Tend)
-    scan_time = FormField(Scan, "Scan")
     ph =  BetterDecimalField("pH", places=2, validators=[Optional()])
-    zip_file = FileField('Zip File')
+    proton = FormField(Scan, "Proton Scan")
+    carbon_1 = FormField(Scan, "Carbon Scan 1")
+    carbon_2 = FormField(Scan, "Carbon Scan 2")
+    carbon_3 = FormField(Scan, "Carbon Scan 3")
+    
 
 
 class InitialEvaluation(Form):
@@ -221,14 +226,22 @@ class Pellets(Form):
     pbs_ph =  BetterDecimalField("PBS pH", places=2, validators=[Optional()])
     eighty_percent = FormField(Pellet, label="80% Pellet")
     interface = FormField(Pellet, label="40/80 Interface Pellet")
- 
 
+
+def create_yes_no(text):
+    return SelectField(text, choices=[
+                                    ('not_chosen', ''),
+                                    ('yes','Yes'),
+                                    ('no','No'),
+                                    ]
+                            ,validators=[Optional()])
 
 class Questionnaire(Form):
     age = IntegerField('What is your age', validators=[Optional(), NumberRange(0, 100)])
     abstained = IntegerField('How long have you abstained in days', validators=[Optional(), NumberRange(0, 1000)])
 
     ethnicity = SelectField(label='Ethnicity', choices=[
+                                    ('not_chosen', ''),
                                     ('white','White'),
                                     ('mixed','Mixed'),
                                     ('asian_asian_british','Asian or Asian British'),
@@ -238,44 +251,36 @@ class Questionnaire(Form):
                                     ])
     height = BetterDecimalField('Height (m)', places=2, validators=[Optional()])
     weight = BetterDecimalField('Weight (kg)', places=2, validators=[Optional()])
-    vasectomy = SelectField('Have you had a vasectomy?', default=None, choices=[
-                                    ('yes','Yes'),
-                                    ('no','No'),
-                                    ])
-    conceived = SelectField('Have you conceived previously?', choices=[
-                                    ('yes','Yes'),
-                                    ('no','No'),
-                                    ])
-    bloodborne_disease = SelectField('Have you tested positive for a blood borne disease (e.g. HIV or Hepatitis)?', choices=[
-                                    ('yes','Yes'),
-                                    ('no','No'),
-                                    ])
-    sti = SelectField('Are you aware that you currently have a Sexually Transmitted Infection? (e.g.chlamydia)', choices=[
-                                    ('yes','Yes'),
-                                    ('no','No'),
-                                    ])
+    vasectomy = create_yes_no('Have you had a vasectomy?')
+    conceived = create_yes_no('Have you conceived previously?')
+    bloodborne_disease = create_yes_no('Have you tested positive for a blood borne disease (e.g. HIV or Hepatitis)?')
+    sti = create_yes_no('Are you aware that you currently have a Sexually Transmitted Infection? (e.g.chlamydia)')
     medications = TextAreaField('Which medications have you taken in the past 3 months?')
-    cancer = SelectField('Have you received treatment for cancer within the 2 past years?', choices=[
-                                    ('yes','Yes'),
-                                    ('no','No'),
-                                    ])
+    cancer = create_yes_no('Have you received treatment for cancer within the 2 past years?')
     supplements = TextAreaField('Are you taking any dietary supplements or multivitamins? If so which ones?')
-    alcohol = SelectField('Do you drink alcohol?', choices=[
-                                    ('yes','Yes'),
-                                    ('no','No'),
-                                    ])
+    alcohol = create_yes_no('Do you drink alcohol?')
 
     units = BetterDecimalField('In a typical week how many units of alcohol do you consume?', places=2, validators=[Optional()])
-    tobacco = SelectField('Do you smoke tobacco?', choices=[
-                                    ('yes','Yes'),
-                                    ('no','No'),
-                                    ])
+    tobacco = create_yes_no('Do you smoke tobacco?')
     smokes = BetterDecimalField('In a typical day how many cigarettes/ cigars/ pipes do you smoke?', places=2, validators=[Optional()])
     smoking_type = RadioField( choices=[
                                     ('cigarettes','Cigarettes'),
                                     ('cigars','Cigars'),
                                     ('pipes','Pipes'),
                                     ], validators=[Optional()])
+
+    use_bike = create_yes_no('Regular use of a bicycle or motorcycle')
+    tight_underwear = create_yes_no('Wearing tight underwear or jeans')
+    use_laptop = create_yes_no('Use of a laptop on lap')
+    use_hottub = create_yes_no('Use hot-tubs or saunas')
+    hot_env = create_yes_no('Work in a hot environment (e.g. kitchen)')
+    use_bike = create_yes_no('Regular use of a bicycle or motorcycle')
+    fever = create_yes_no('Had a fever of two weeks or more')
+    warm_groin = create_yes_no('Activities that warm your groin')
+    use_glues = create_yes_no('Use of glues, paints or solvents')
+    exposed_lead = create_yes_no('Exposed to lead at work')
+    night_shifts = create_yes_no('Any night shifts or sleep disorders')
+
     more_information = TextAreaField('More information')
     
 
@@ -307,13 +312,15 @@ def write_donor(form):
         if not os.path.exists(pellet_path):
             os.makedirs(pellet_path)
 
-    for upload, pellet, name in [(form.pellets.interface.zip_file.data, 'interface', 'zip_file'),
-                                 (form.pellets.eighty_percent.zip_file.data, 'eighty_percent', 'zip_file')]:
-        if len(upload.filename) > 0:
-            upload.save(joinpath(path, pellet, "%s.zip" % name))
-            copy2(joinpath(path, pellet, "%s.zip" % name), joinpath(path, pellet, 'previous', "%d_%s.zip" % (current_time, name)))
-    form.pellets.interface.zip_file.data = None
-    form.pellets.eighty_percent.zip_file.data = None
+    for pellet, pellet_name in [(form.pellets.interface, 'interface'), (form.pellets.eighty_percent, 'eighty_percent')]:
+        for upload, name in [(pellet.proton.zip_file, 'proton_scan'),
+                             (pellet.carbon_1.zip_file, 'carbon_1_scan'),
+                             (pellet.carbon_2.zip_file, 'carbon_2_scan'),
+                             (pellet.carbon_3.zip_file, 'carbon_3_scan')]:
+            if len(upload.data.filename) > 0:
+                upload.data.save(joinpath(path, pellet_name, "%s.zip" % name))
+                copy2(joinpath(path, pellet_name, "%s.zip" % name), joinpath(path, pellet_name, 'previous', "%d_%s.zip" % (current_time, name)))
+            upload.data = None
     print("Saving the file")
     filename = joinpath(path, "donor_data.json")
     for filename in [joinpath(path, "donor_data.json"),
@@ -334,7 +341,7 @@ def new_donor():
 
 def find_files(donor_id):
     for pellet in ["eighty_percent", "interface"]:
-        for filename in ["matlab_spectra.raw", "raw_spectra.raw"]:
+        for filename in ["proton_scan.zip", "carbon_1_scan.zip", "carbon_2_scan.zip", "carbon_3_scan.zip"]:
             file_path = joinpath('data', 'donors', donor_id, pellet, filename)
             if os.path.isfile(file_path):
                 yield (donor_id, pellet, filename)
