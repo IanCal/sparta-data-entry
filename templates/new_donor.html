@@ -7,31 +7,108 @@
   {{ super() }}
   <style type="text/css">
     .important { color: #336699; }
+    .form-group {
+      padding-left: 30px;
+    }
 
-fieldset {
-    border: 1px groove #ddd !important;
-    padding: 0 0.4em 0.4em 0.4em !important;
-    margin: 0 0 1.5em 0 !important;
-    -webkit-box-shadow:  0px 0px 0px 0px #000;
-            box-shadow:  0px 0px 0px 0px #000;
-}
-
-legend {
-    width:inherit; /* Or auto */
-    padding:0 10px; /* To give a bit of padding on the left and right */
-    border-bottom:none;
-}
 
   </style>
 {% endblock %}
 {% block content  %}
 {{util.flashed_messages(dismissible=True)}}
 
-{% if form.errors %}
-    {{ form.errors }}
-{% endif %}
 
 
+{% macro motility(motility) %}
+<div class="row">
+  <div class='col-sm-3'>
+    {{ wtf.form_field(motility.a)}}
+  </div>
+  <div class='col-sm-3'>
+    {{ wtf.form_field(motility.b)}}
+  </div>
+  <div class='col-sm-3'>
+    {{ wtf.form_field(motility.c)}}
+  </div>
+  <div class='col-sm-3'>
+    {{ wtf.form_field(motility.d)}}
+  </div>
+</div> 
+<div class="row">
+  <div class='col-sm-12'>
+    {{ wtf.form_field(motility.concentration)}}
+  </div>
+</div>   
+{% endmacro %}
+
+{% macro two_col(left, right) %}
+<div class="row">
+  <div class='col-sm-6'>
+    {{ wtf.form_field(left)}}
+  </div>
+  <div class='col-sm-6'>
+    {{ wtf.form_field(right)}}
+  </div>
+</div>
+{% endmacro %}
+
+{% macro vitality(item) %}
+<h5>Vitality</h5>
+{{ two_col(item.count_1.red, item.count_1.green) }}
+{{ two_col(item.count_2.red, item.count_2.green) }}
+{% endmacro %}
+
+{% macro t0(item) %}
+<h5>PBS Motility</h5>
+{{ motility(item.pbs) }}
+<h5>Wash Motility</h5>
+{{ motility(item.wash) }}
+
+{{ vitality(item.vitality) }}
+{% endmacro %}
+
+{% macro scan(item) %}
+
+{{ wtf.form_field(item.scan_type)}}
+{{ two_col(item.start_time, item.end_time) }}
+
+<h5>Wash Motility</h5>
+{{ motility(item.tend.wash) }}
+
+{{ vitality(item.tend.vitality) }}
+
+{{ wtf.form_field(item.zip_file) }}
+{% endmacro %}
+
+{% macro pellet(item, id_prefix) %}
+<h4>Carbon T0</h4>
+{{ t0(item.carbon_t0) }}
+<h4>Proton T0</h4>
+{{ t0(item.proton_t0) }}
+
+
+<ul class="nav nav-tabs nav-justified">
+  <li class="active"><a data-toggle="tab" href="#{{id_prefix}}proton_80">Proton Scan</a></li>
+  <li><a data-toggle="tab" href="#{{id_prefix}}carbon1_80">Carbon Scan 1</a></li>
+  <li><a data-toggle="tab" href="#{{id_prefix}}carbon2_80">Carbon Scan 2</a></li>
+  <li><a data-toggle="tab" href="#{{id_prefix}}carbon3_80">Carbon Scan 3</a></li>
+</ul>
+
+<div class="tab-content">
+  <div id="{{id_prefix}}proton_80" class="tab-pane fade in active">
+    {{ scan(item.proton) }}
+  </div>
+  <div id="{{id_prefix}}carbon1_80" class="tab-pane fade">
+    {{ scan(item.carbon_1) }}
+  </div>
+  <div id="{{id_prefix}}carbon2_80" class="tab-pane fade">
+    {{ scan(item.carbon_2) }}
+  </div>
+  <div id="{{id_prefix}}carbon3_80" class="tab-pane fade">
+    {{ scan(item.carbon_3) }}
+  </div>
+</div>
+{% endmacro %}
 
 <div class="container">
   <div class="row">
@@ -48,11 +125,104 @@ legend {
   <div class="row">
     <div class='col-sm-12'>
       <h1>Edit donation</h1>
-      {{ wtf.quick_form(form, form_type='horizontal', enctype="multipart/form-data", horizontal_columns = ('lg', 3, 9), action="")}}
+      <form action="" method="post" class="form form-horizontal" enctype="multipart/form-data" role="form">
+      {{ form.hidden_tag() }}
+      {{ wtf.form_field(form.donor_id)}}
+  <div class="row">
+    <div class='col-sm-4'>
+      {{ wtf.form_field(form.donation_time)}}
+    </div>
+    <div class='col-sm-4'></div>
+    <div class='col-sm-4'>
+      {{ wtf.form_field(form.abstinence)}}
     </div>
   </div>
   
+  <h3>Questionnaire</h3>
+ 
+  <div class="row">
+    <div class='col-sm-12'>
+      {{ wtf.form_field(form.questionnaire.age)}}
+      <div class="row">
+        <div class='col-sm-4'>
+          {{ wtf.form_field(form.questionnaire.height)}}
+        </div>
+        <div class='col-sm-4'>
+          {{ wtf.form_field(form.questionnaire.weight)}}
+        </div>
+        <div class='col-sm-4'>
+          <div class="form-group ">
+            <label class="control-label" for="bmi">BMI</label>
+            <input class="form-control" disabled="1" id="bmi" name="bmi" type="text" value="">
+          </div>
+        </div>
+      </div>
+      {{ wtf.form_field(form.questionnaire.ethnicity)}}
+      {{ wtf.form_field(form.questionnaire.abstained)}}
+      {{ wtf.form_field(form.questionnaire.conceived)}}
+      {{ wtf.form_field(form.questionnaire.bloodborne_disease)}}
+      {{ wtf.form_field(form.questionnaire.sti)}}
+      {{ wtf.form_field(form.questionnaire.medications)}}
+      {{ wtf.form_field(form.questionnaire.cancer)}}
+      {{ wtf.form_field(form.questionnaire.supplements)}}
+      {{ wtf.form_field(form.questionnaire.alcohol)}}
+      {{ wtf.form_field(form.questionnaire.units)}}
+      {{ wtf.form_field(form.questionnaire.tobacco)}}
+      <div class="row">
+        <div class='col-sm-8'>
+          {{ wtf.form_field(form.questionnaire.smokes)}}
+        </div>
+        <div class='col-sm-4'>
+          {{ wtf.form_field(form.questionnaire.smoking_type)}}
+        </div>
+      </div>
 
+    <h4>Which of these applies over the past three months:</h4>
+      {{ two_col(form.questionnaire.use_bike, form.questionnaire.fever) }}
+      {{ two_col(form.questionnaire.tight_underwear, form.questionnaire.warm_groin) }}
+      {{ two_col(form.questionnaire.use_laptop, form.questionnaire.use_glues) }}
+      {{ two_col(form.questionnaire.use_hottub, form.questionnaire.exposed_lead) }}
+      {{ two_col(form.questionnaire.hot_env, form.questionnaire.night_shifts) }}
+
+      {{ wtf.form_field(form.questionnaire.more_information)}}
+    </div>
+
+
+  </div>
+  <h3>Initial Evaluation</h3>
+  <h4>Sample prep</h4>
+  {{ two_col(form.initial_evaluation.sample_prep_duration.start_time, form.initial_evaluation.sample_prep_duration.end_time) }}
+  <h4>Analysis</h4>
+  {{ two_col(form.initial_evaluation.analysis_duration.start_time, form.initial_evaluation.analysis_duration.end_time) }}
+
+  <h4>General</h4>
+
+  {{ wtf.form_field(form.initial_evaluation.method) }}
+  {{ wtf.form_field(form.initial_evaluation.volume)}}
+  {{ wtf.form_field(form.initial_evaluation.ph)}}
+  {{ wtf.form_field(form.initial_evaluation.morphology)}}
+  {{ wtf.form_field(form.initial_evaluation.viscosity)}}
+  {{ two_col(form.initial_evaluation.agglutination, form.initial_evaluation.agglutination_type)}}
+
+  {{ wtf.form_field(form.initial_evaluation.comments)}}
+
+  <h4>Andrology motility</h4>
+  {{ motility(form.initial_evaluation.andrology_motility)}}
+
+  <h4>CASA motility</h4>
+  {{ motility(form.initial_evaluation.casa_motility)}}
+
+<h3>80% Pellet</h3>
+{{ pellet(form.pellets.eighty_percent, 'eighty_') }}
+
+
+<h3>40/80 Interface Pellet</h3>
+{{ pellet(form.pellets.interface, 'interface_') }}
+
+    </div>
+  </div>
+  <input class="btn btn-default" id="submit_button" name="submit_button" type="submit" value="Submit Form">
+  </form>
 </div>
 {% endblock %}
 {% block scripts  %}
@@ -62,11 +232,14 @@ legend {
       <script src="/static/js/bootstrap-datetimepicker.js"></script>
       <link rel="stylesheet" href="/static/css/bootstrap-datetimepicker.css" />
 <script type="text/javascript">
+            var set_bmi = function() {
+              var weight = $("input[id='questionnaire-weight']").val();
+              var height = $("input[id='questionnaire-height']").val();
+              $("input[id='bmi']").val(weight / (height*height));
+            }
             $(function () {
-              $($("fieldset fieldset")[2]).wrap( "<div class='col-sm-6'></div>" );
-              //$($("fieldset fieldset")[4]).wrap( "<div class='col-sm-6'></div>" );
-              //$($("fieldset")[5].children[1]).wrap( "<div class='col-sm-6'></div>" );
-              //$($("fieldset")[5].children[2]).wrap( "<div class='col-sm-6'></div>" );
+               $("input[id='questionnaire-weight']").change(set_bmi);
+               $("input[id='questionnaire-height']").change(set_bmi);
                $("input[id*='_time']").each(function (i, el) {
                   $(el).datetimepicker({
                   locale: 'en-gb',
