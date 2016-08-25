@@ -160,6 +160,7 @@ class T0(Form):
 class Tend(Form):
     wash = FormField(Motility)
     vitality = FormField(Vitality)
+    ph = BetterDecimalField("pH", validators=[Optional()])
 
 class Duration(Form):
     start_time = DateTimeField('Start time',format='%d/%m/%Y %H:%M', validators=[Optional()])
@@ -178,6 +179,8 @@ class Scan(Duration):
                                                  ])
     tend = FormField(Tend)
     zip_file = FileField('Zip File')
+    scan_number = TextField('Scan number in file')
+    comments = TextField('Details about the scan')
 
 class Pellet(Form):
     carbon_t0 = FormField(T0)
@@ -392,7 +395,10 @@ def root():
         add_duration(sample_prep_durations, donor["initial_evaluation"]["sample_prep_duration"])
         add_duration(analysis_durations, donor["initial_evaluation"]["analysis_duration"])
         for pellet in ["eighty_percent", "interface"]:
-            add_duration(scan_durations, donor["pellets"][pellet]["scan_time"])
+            add_duration(scan_durations, donor["pellets"][pellet]["carbon_1"])
+            add_duration(scan_durations, donor["pellets"][pellet]["carbon_2"])
+            add_duration(scan_durations, donor["pellets"][pellet]["carbon_3"])
+            add_duration(scan_durations, donor["pellets"][pellet]["proton"])
     return render_template('index.html',
         donors=all_donors,
         total_donors=len(all_donors),

@@ -71,16 +71,28 @@
 
 {{ wtf.form_field(item.scan_type)}}
 {{ two_col(item.start_time, item.end_time) }}
-
+<h4>T_end</h4>
 <h5>Wash Motility</h5>
 {{ motility(item.tend.wash) }}
 
 {{ vitality(item.tend.vitality) }}
+{{ wtf.form_field(item.tend.ph) }}
 
-{{ wtf.form_field(item.zip_file) }}
+<div class="row">
+  <div class='col-sm-4'>
+    {{ wtf.form_field(item.zip_file)}}
+  </div>
+  <div class='col-sm-4'>
+    {{ wtf.form_field(item.scan_number)}}
+  </div>
+  <div class='col-sm-4'>
+    {{ wtf.form_field(item.comments)}}
+  </div>
+</div> 
 {% endmacro %}
 
 {% macro pellet(item, id_prefix) %}
+{{ wtf.form_field(item.leukocyte_ratio_to_sperm) }}
 <h4>Carbon T0</h4>
 {{ t0(item.carbon_t0) }}
 <h4>Proton T0</h4>
@@ -190,21 +202,21 @@
 
   </div>
   <h3>Initial Evaluation</h3>
+  <h4>Andrology Analysis</h4>
+  {{ two_col(form.initial_evaluation.analysis_duration.start_time, form.initial_evaluation.analysis_duration.end_time) }}
   <h4>Sample prep</h4>
   {{ two_col(form.initial_evaluation.sample_prep_duration.start_time, form.initial_evaluation.sample_prep_duration.end_time) }}
-  <h4>Analysis</h4>
-  {{ two_col(form.initial_evaluation.analysis_duration.start_time, form.initial_evaluation.analysis_duration.end_time) }}
 
   <h4>General</h4>
 
   {{ wtf.form_field(form.initial_evaluation.method) }}
   {{ wtf.form_field(form.initial_evaluation.volume)}}
   {{ wtf.form_field(form.initial_evaluation.ph)}}
-  {{ wtf.form_field(form.initial_evaluation.morphology)}}
   {{ wtf.form_field(form.initial_evaluation.viscosity)}}
   {{ two_col(form.initial_evaluation.agglutination, form.initial_evaluation.agglutination_type)}}
 
   {{ wtf.form_field(form.initial_evaluation.comments)}}
+  {{ wtf.form_field(form.initial_evaluation.morphology)}}
 
   <h4>Andrology motility</h4>
   {{ motility(form.initial_evaluation.andrology_motility)}}
