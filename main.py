@@ -1,7 +1,7 @@
 from flask_wtf.csrf import CsrfProtect
 from flask.ext.bootstrap import Bootstrap
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, send_from_directory
+from flask import Flask, render_template, request, redirect, send_from_directory, flash
 from random import getrandbits
 from decimal import Decimal
 from shutil import copy2
@@ -22,6 +22,14 @@ from flask_wtf.file import FileField
 
 import wtforms_json
 
+def flash_errors(form):
+    """Flashes form errors"""
+    for field, errors in form.errors.items():
+        for error in errors:
+            flash(u"Error in the %s field - %s" % (
+                getattr(form, field).label.text,
+                error
+            ), 'error')
 
 from wtforms import DecimalField
 
@@ -111,9 +119,10 @@ def is_asthenozoospermic(data):
 
 
 def check_status(data):
-    return [("Initial evaluation", all_set(data["initial_evaluation"])),
-            ("Interface pellet", all_set(data["pellets"]["interface"])),
-            ("80% pellet", all_set(data["pellets"]["eighty_percent"])),
+    return [("Questionnaire", all_set(data["questionnaire"])),
+            ("Initial evaluation", all_set(data["initial_evaluation"])),
+            ("Interface pellet, carbon t0", all_set(data["pellets"]["interface"]["carbon_t0"])),
+            ("80% pellet, carbon t0", all_set(data["pellets"]["eighty_percent"]["carbon_t0"])),
             ]
 
 def get_all_donors():
@@ -142,7 +151,7 @@ class Motility(Form):
     b = BetterDecimalField(label="SP (b) %", places=2, validators=[Optional(), NumberRange(0,100)])
     c = BetterDecimalField(label="NP (c) %", places=2, validators=[Optional(), NumberRange(0,100)])
     d = BetterDecimalField(label="IM (d) %", places=2, validators=[Optional(), NumberRange(0,100)])
-    concentration = BetterDecimalField(label="Concentration (10^6/ml)", places=2, validators=[Optional(), NumberRange(0,100)])
+    concentration = BetterDecimalField(label="Concentration (10^6/ml)", places=2, validators=[Optional(), NumberRange(0,1e100)])
 
 class VitalitySection(Form):
     red = IntegerField(label="Red", validators=[Optional(), NumberRange(0,100000)])
@@ -167,7 +176,7 @@ class Duration(Form):
     end_time = DateTimeField('End time',format='%d/%m/%Y %H:%M', validators=[Optional()])
 
 class Scan(Duration):
-    scan_type = SelectField('Scan type', choices=[
+    scan_type = SelectField('Scan type', choices=[  ('not_chosen', 'None'),
                                                     ('proton', 'Proton'),
                                                     ('glucose_13cu', 'Glucose 13Cu'),
                                                     ('fructose_13cu', 'Fructose 13Cu'),
@@ -354,9 +363,12 @@ def edit_donor(donor_id):
     print("EDIT DONOR")
     form = Donor()
     print(form.validate_on_submit())
-    if request.method == 'POST' and form.validate_on_submit():
-        write_donor(form)
-        return redirect('/donors/%s' % (donor_id))
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            write_donor(form)
+            return redirect('/donors/%s' % (donor_id))
+        else:
+            flash_errors(form)
     if form.donor_id.data is None:
         path = joinpath("data", "donors", donor_id)
         filename = joinpath(path, "donor_data.json")
@@ -388,27 +400,9 @@ def add_duration(durations, elem):
 @app.route('/')
 def root():
     all_donors = get_all_donors()
-    sample_prep_durations = []
-    analysis_durations = []
-    scan_durations = []
-    for donor in all_donors:
-        add_duration(sample_prep_durations, donor["initial_evaluation"]["sample_prep_duration"])
-        add_duration(analysis_durations, donor["initial_evaluation"]["analysis_duration"])
-        for pellet in ["eighty_percent", "interface"]:
-            add_duration(scan_durations, donor["pellets"][pellet]["carbon_1"])
-            add_duration(scan_durations, donor["pellets"][pellet]["carbon_2"])
-            add_duration(scan_durations, donor["pellets"][pellet]["carbon_3"])
-            add_duration(scan_durations, donor["pellets"][pellet]["proton"])
     return render_template('index.html',
         donors=all_donors,
-        total_donors=len(all_donors),
-        timing_histograms=
-        [
-            ('Sample prep', json.dumps(sample_prep_durations), 'sample_prep'),
-            ('Initial analysis', json.dumps(analysis_durations), 'analysis'),
-            ('Scans', json.dumps(scan_durations), 'scans'),
-        ])
+        total_donors=len(all_donors))
 
 if __name__ == '__main__':
-    print("RUNNIN")
     app.run(host='0.0.0.0', port=5000, debug=True)

@@ -27,20 +27,11 @@ legend {
 {% block content  %}
 {{util.flashed_messages(dismissible=True)}}
 
-  {% macro render_field(field) %}
-    I AM {{field}}
-  {% endmacro %}
 
 <div class="container">
   <div class="row">
     <div class='col-sm-12'>
       <h1>Basic statistics</h1>
-      {{ render_field("HELLO") }}
-      {{ render_field("HELLO2") }}
-      {{ render_field("HELLO3") }}
-      {{ render_field("HELLO4") }}
-      {{ render_field("HELLO5") }}
-      {{ render_field("HELLO6") }}
       Total donors: {{ total_donors }}
     </div>
   </div>
@@ -52,56 +43,15 @@ legend {
    <div class="row">
     <div class='col-sm-12'>
       <h1>Donors</h1>
+      <a class="btn btn-primary" href="{{ url_for('donor_list')}}">View all donors</a><br><br>
       <a class="btn btn-primary" href="{{ url_for('new_donor') }}">Create a new donor</a>
     </div>
   </div>
-  {% for donor in donors %}
-
-  <div class="row">
-    <div class="col-sm-12">
-      <div class="panel panel-default">
-        <div class="panel-heading">Donor ID: {{ donor["donor_id"] }}</div>
-          <div class="panel-body">
-           {% if donor["asthenozoospermic"] %}
-           Donor is asthenozoospermic
-           {% endif %}
-           <ol>
-           {% for label, completed in donor["status"] %}
-              {% if completed %}
-                <li><del>{{ label }}</del></li>
-              {% else %}
-                <li>{{ label }}</li>
-              {% endif %}
-           {% endfor %}
-           </ol>
-           <a href="{{ url_for('edit_donor', donor_id=donor["donor_id"]) }}">Edit this donor</a>
-          </div>
-        </div>
-      </div>
-    </div>
-  {% endfor %}
-
+  
 </div>
 {% endblock %}
 
 {% block scripts  %}
 {{super()}}
 
-<script src="/static/js/plotly-latest.min.js"></script>
-<script type="text/javascript">
-$(function () {
-  var data_list = []
-  {% for title, data, id in timing_histograms %}
-    data_list.push({
-      y: {{data}},
-      name: '{{title}}',
-      boxpoints: 'all',
-      jitter: 0.3,
-      pointpos: -1.8,
-      type: 'box'
-    })
-  {% endfor %}
-  Plotly.plot(document.getElementById('durations'), data_list, {title:"Durations of common tasks", yaxis:{title:"minutes"}})
-  });
-</script>
 {% endblock %}

@@ -22,6 +22,9 @@
         <div class="panel-heading">Donor ID: {{ donor["donor_id"] }}</div>
           <div class="panel-body">
            <ol>
+           {% if donor["asthenozoospermic"] %}
+           Donor is asthenozoospermic
+           {% endif %}
            {% for label, completed in donor["status"] %}
               {% if completed %}
                 <li><del>{{ label }}</del></li>

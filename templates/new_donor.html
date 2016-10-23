@@ -2,7 +2,7 @@
 {% import "bootstrap/wtf.html" as wtf %}
 {% import "bootstrap/fixes.html" as fixes %}
 {% import "bootstrap/utils.html" as util %}
-{% block title %}Donor list{% endblock %}
+{% block title %}New Donor{% endblock %}
 {% block head %}
   {{ super() }}
   <style type="text/css">
@@ -15,7 +15,7 @@
   </style>
 {% endblock %}
 {% block content  %}
-{{util.flashed_messages(dismissible=True)}}
+
 
 
 
@@ -125,6 +125,10 @@
 <div class="container">
   <div class="row">
     <div class='col-sm-12'>
+    
+{{util.flashed_messages(dismissible=True)}}
+    <h1>Donors</h1>
+      <a href="{{ url_for('donor_list')}}">Back to all donor list</a><br><br>
       <h1>Uploaded files:</h1>
       <ul>
       {% for donor_id, pellet, filename in files %}
