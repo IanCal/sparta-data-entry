@@ -151,7 +151,7 @@ class Motility(Form):
     b = BetterDecimalField(label="SP (b) %", places=2, validators=[Optional(), NumberRange(0,100)])
     c = BetterDecimalField(label="NP (c) %", places=2, validators=[Optional(), NumberRange(0,100)])
     d = BetterDecimalField(label="IM (d) %", places=2, validators=[Optional(), NumberRange(0,100)])
-    concentration = BetterDecimalField(label="Concentration (10^6/ml)", places=2, validators=[Optional(), NumberRange(0,1e100)])
+    concentration = BetterDecimalField(label="Concentration (10^6/ml)", places=2, validators=[Optional(), NumberRange(0,1000)])
 
 class VitalitySection(Form):
     red = IntegerField(label="Red", validators=[Optional(), NumberRange(0,100000)])
