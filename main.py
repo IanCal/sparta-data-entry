@@ -122,8 +122,6 @@ def is_asthenozoospermic(data):
 def check_status(data):
     return [("Questionnaire", all_set(data["questionnaire"])),
             ("Initial evaluation", all_set(data["initial_evaluation"])),
-            ("Interface pellet, carbon t0", all_set(data["pellets"]["interface"]["carbon_t0"])),
-            ("80% pellet, carbon t0", all_set(data["pellets"]["eighty_percent"]["carbon_t0"])),
             ]
 
 def get_all_donors():
@@ -206,7 +204,7 @@ class Pellet(Form):
 
 class InitialEvaluation(Form):
     method = SelectField('Method of production', choices=[('home', 'Masturbation at home'),
-                                                          ('office', 'Masturbation at office'),
+                                                          ('clinic', 'Masturbation at clinic'),
                                                           ('intercourse', 'Intercourse')])
     analysis_duration = FormField(Duration, label="Analysis")
     sample_prep_duration = FormField(Duration, label="Sample Prep")
@@ -303,7 +301,7 @@ class Donor(Form):
     donor_id = StringField('Donor ID', validators=[DataRequired()])
     donation_time =  DateTimeField('Donation Time',format='%d/%m/%Y %H:%M', validators=[Optional()])
 
-    abstinence = IntegerField('Days of abstinence', validators=[Optional(), NumberRange(0, 100000)])
+    abstinence = StringField('Days of abstinence', validators=[Optional()])
 
     questionnaire = FormField(Questionnaire, label="Questionnaire")
 
@@ -367,8 +365,10 @@ def edit_donor(donor_id):
     if request.method == 'POST':
         if form.validate_on_submit():
             write_donor(form)
+            flash("Saved successfully", "info")
             return redirect('/donors/%s' % (donor_id))
         else:
+            flash("Error saving, please check validation messages", "error")
             flash_errors(form)
     if form.donor_id.data is None:
         path = joinpath("data", "donors", donor_id)
@@ -408,4 +408,3 @@ def root():
 if __name__ == '__main__':
     threading.Timer(3, lambda: webbrowser.open('http://127.0.0.1:5000/') ).start()
     app.run(host='127.0.0.1', port=5000, debug=False)
-     
