@@ -54,8 +54,8 @@
 
 {% macro vitality(item) %}
 <h5>Vitality</h5>
-{{ two_col(item.count_1.red, item.count_1.green) }}
-{{ two_col(item.count_2.red, item.count_2.green) }}
+{{ two_col(item.count_1.green, item.count_1.red) }}
+{{ two_col(item.count_2.green, item.count_2.red) }}
 {% endmacro %}
 
 {% macro t0(item) %}
@@ -125,7 +125,6 @@
 <div class="container">
   <div class="row">
     <div class='col-sm-12'>
-    
 {{util.flashed_messages(dismissible=True)}}
     <h1>Donors</h1>
       <a href="{{ url_for('donor_list')}}">Back to all donor list</a><br><br>
@@ -254,6 +253,7 @@
               $("input[id='bmi']").val(weight / (height*height));
             }
             $(function () {
+              set_bmi();
                $("input[id='questionnaire-weight']").change(set_bmi);
                $("input[id='questionnaire-height']").change(set_bmi);
                $("input[id*='_time']").each(function (i, el) {
