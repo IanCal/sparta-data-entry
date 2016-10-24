@@ -1,3 +1,4 @@
+import webbrowser, threading
 from flask_wtf.csrf import CsrfProtect
 from flask.ext.bootstrap import Bootstrap
 from datetime import datetime
@@ -405,4 +406,6 @@ def root():
         total_donors=len(all_donors))
 
 if __name__ == '__main__':
+    threading.Timer(3, lambda: webbrowser.open('http://127.0.0.1:5000/') ).start()
     app.run(host='127.0.0.1', port=5000, debug=False)
+     
