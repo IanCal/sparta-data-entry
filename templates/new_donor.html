@@ -252,17 +252,20 @@
               var height = $("input[id='questionnaire-height']").val();
               $("input[id='bmi']").val(weight / (height*height));
             }
+            
             $(function () {
               set_bmi();
                $("input[id='questionnaire-weight']").change(set_bmi);
                $("input[id='questionnaire-height']").change(set_bmi);
                $("input[id*='_time']").each(function (i, el) {
                   $(el).datetimepicker({
-                  locale: 'en-gb',
-                  sideBySide: true,
-                })
-              });
-                
+                    locale: 'en-gb',
+                    sideBySide: true,
+                    toolbarPlacement: 'top',
+                    showTodayButton: true
+                  });
+                });
+              
             });
         </script>
         {% endblock %}

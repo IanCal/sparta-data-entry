@@ -1108,8 +1108,9 @@
                 clear: clear,
 
                 today: function () {
-                    if (isValid(moment(), 'd')) {
-                        setValue(moment());
+                    var donation = $("#donation_time").data("DateTimePicker").date();
+                    if (isValid(donation, 'd')) {
+                        setValue(donation);
                     }
                 },
 
@@ -2336,7 +2337,7 @@
             close: 'glyphicon glyphicon-remove'
         },
         tooltips: {
-            today: 'Go to today',
+            today: 'Go to donation time',
             clear: 'Clear selection',
             close: 'Close the picker',
             selectMonth: 'Select Month',
