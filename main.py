@@ -311,7 +311,6 @@ class Donor(Form):
     submit_button = SubmitField('Submit Form')
 
 def write_donor(form):
-    print("Write donor")
     donor_id = form.donor_id.data
     current_time = int(time())
     previous_path = joinpath("data", "donors", donor_id, "previous")
@@ -332,7 +331,6 @@ def write_donor(form):
                 upload.data.save(joinpath(path, pellet_name, "%s.zip" % name))
                 copy2(joinpath(path, pellet_name, "%s.zip" % name), joinpath(path, pellet_name, 'previous', "%d_%s.zip" % (current_time, name)))
             upload.data = None
-    print("Saving the file")
     filename = joinpath(path, "donor_data.json")
     for filename in [joinpath(path, "donor_data.json"),
                      joinpath(previous_path, "%d.json" % current_time)]:
@@ -340,7 +338,6 @@ def write_donor(form):
             data= form.data
             data["updated"] = current_time
             json.dump(data, f_out, default=wtforms_json_handler, indent=4)
-    print("Saved?")
 
 @app.route('/donors/new', methods=('GET', 'POST'))
 def new_donor():
@@ -382,7 +379,6 @@ def custom_static(donor_id, pellet, filename):
     path = joinpath('data', 
                                         secure_filename(donor_id),
                                         secure_filename(pellet))
-    print(path)
     return send_from_directory(joinpath('data', 
                                         'donors',
                                         secure_filename(donor_id),
