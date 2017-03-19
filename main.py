@@ -194,7 +194,6 @@ class Pellet(Form):
     carbon_t0 = FormField(T0)
     proton_t0 = FormField(T0)
     leukocyte_ratio_to_sperm = BetterDecimalField(places=2, validators=[Optional()])
-    ph =  BetterDecimalField("pH", places=2, validators=[Optional()])
     proton = FormField(Scan, "Proton Scan")
     carbon_1 = FormField(Scan, "Carbon Scan 1")
     carbon_2 = FormField(Scan, "Carbon Scan 2")
@@ -233,8 +232,6 @@ class InitialEvaluation(Form):
     casa_motility = FormField(Motility, label="CASA Motility")
 
 class Pellets(Form):
-
-    pbs_ph =  BetterDecimalField("PBS pH", places=2, validators=[Optional()])
     eighty_percent = FormField(Pellet, label="80% Pellet")
     interface = FormField(Pellet, label="40/80 Interface Pellet")
 
