@@ -168,7 +168,8 @@ class T0(Form):
 class Tend(Form):
     wash = FormField(Motility)
     vitality = FormField(Vitality)
-    ph = BetterDecimalField("pH", validators=[Optional()])
+    sample_ph = BetterDecimalField("Sample pH", validators=[Optional()])
+    pbs_ph = BetterDecimalField("PBS pH", validators=[Optional()])
 
 class Duration(Form):
     start_time = DateTimeField('Start time',format='%d/%m/%Y %H:%M', validators=[Optional()])
@@ -353,9 +354,7 @@ def find_files(donor_id):
 
 @app.route('/donors/<donor_id>', methods=('GET', 'POST'))
 def edit_donor(donor_id):
-    print("EDIT DONOR")
     form = Donor()
-    print(form.validate_on_submit())
     if request.method == 'POST':
         if form.validate_on_submit():
             write_donor(form)
