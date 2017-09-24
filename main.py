@@ -178,13 +178,16 @@ class Duration(Form):
 class Scan(Duration):
     scan_type = SelectField('Scan type', choices=[  ('not_chosen', 'None'),
                                                     ('proton', 'Proton'),
-                                                    ('glucose_13cu', 'Glucose 13Cu'),
-                                                    ('fructose_13cu', 'Fructose 13Cu'),
-                                                    ('pyruvate_13c1', 'Pyruvate 13C1'),
-                                                    ('pyruvate_13c2', 'Pyruvate 13C2'),
-                                                    ('glucose_13cu_pyruvate_13c1', 'Glucose 13Cu & Pyruvate 13C1'),
-                                                    ('glucose_13C1_6_pyruvate_13c2', 'Glucose 13C1,6 & Pyruvate 13C2'),
-                                                    ('hydroxybutyrate', 'Hydroxybutyrate'),
+                                                    ('cu_glucose', 'Cu Glucose'),
+                                                    ('cu_fructose', 'Cu Fructose'),
+                                                    ('c1_pyruvate', 'C1 Pyruvate'),
+                                                    ('cu_glucose_c1_pyruvate', 'Cu Glucose & C1 Pyruvate'),
+                                                    ('cu_fructose_c1_pyruvate', 'Cu Fructose & C1 Pyruvate'),
+                                                    ('cu_galactose', 'Cu Galactose'),
+                                                    ('c1_butyrate', 'C1 Butyrate'),
+                                                    ('additional_substrate_1', 'Additional substrate 1'),
+                                                    ('additional_substrate_2', 'Additional substrate 2'),
+                                                    ('additional_substrate_3', 'Additional substrate 3'),
                                                  ])
     tend = FormField(Tend)
     zip_file = FileField('Zip File')
