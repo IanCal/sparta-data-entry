@@ -197,7 +197,7 @@ class Scan(Duration):
 class Pellet(Form):
     carbon_t0 = FormField(T0)
     proton_t0 = FormField(T0)
-    leukocyte_ratio_to_sperm = BetterDecimalField(places=2, validators=[Optional()])
+    non_sperm_to_sperm_cell_ratio = BetterDecimalField(label="Non-sperm cell ratio to sperm cells", places=2, validators=[Optional()])
     proton = FormField(Scan, "Proton Scan")
     carbon_1 = FormField(Scan, "Carbon Scan 1")
     carbon_2 = FormField(Scan, "Carbon Scan 2")
