@@ -11,16 +11,10 @@ def get_all_donors():
 	return os.listdir(donor_folder)
 
 file_descriptions = {
-	'volume_and_age.csv': {
-		'volume': ['initial_evaluation', 'volume'],
-		'ph': ['initial_evaluation', 'ph'],
-		'viscosity': ['initial_evaluation', 'viscosity'],
-		'age': ['questionnaire', 'age'],
-	},
-	'proton_scans_ph.csv': {
-		'initial_ph': ['initial_evaluation', 'ph'],
-		'end_pbs_ph': ['pellets', 'eighty_percent', 'proton', 'tend', 'pbs_ph'],
-		'end_sample_ph': ['pellets', 'eighty_percent', 'proton', 'tend', 'sample_ph'],
+	'carbon_methods.csv': {
+		'donor_id': ['donor_id'],
+		'donation_time': ['donation_time'],
+		'days_abstinence': ['abstinence'],
 	},
 }
 
