@@ -135,7 +135,7 @@ def get_all_donors():
             data["status"] = check_status(data)
             data["asthenozoospermic"] = is_asthenozoospermic(data)
             donor_list.append(data)
-    donor_list.sort(key=lambda x: x.get("updated", 0), reverse=True)
+    donor_list.sort(key=lambda x: x.get("donor_id", 0), reverse=True)
     return donor_list
 
 
