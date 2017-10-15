@@ -123,7 +123,7 @@ file_descriptions = {
 }
 
 for filename, description in file_descriptions.items():
-	with open(os.path.join('tables', filename), 'w') as f_out:
+	with open(os.path.join('tables', filename), 'w', newline='') as f_out:
 		header = [row[0] for row in description]
 		writer = DictWriter(f_out, header)
 		writer.writeheader()
