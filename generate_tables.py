@@ -18,8 +18,9 @@ file_descriptions = {
 		'age': ['questionnaire', 'age'],
 	},
 	'proton_scans_ph.csv': {
-		'end_ph': ['pellets', 'eighty_percent', 'proton', 'tend', 'ph'],
-		'ph': ['initial_evaluation', 'ph'],
+		'initial_ph': ['initial_evaluation', 'ph'],
+		'end_pbs_ph': ['pellets', 'eighty_percent', 'proton', 'tend', 'pbs_ph'],
+		'end_sample_ph': ['pellets', 'eighty_percent', 'proton', 'tend', 'sample_ph'],
 	},
 }
 
