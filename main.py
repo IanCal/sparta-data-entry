@@ -199,7 +199,6 @@ class Pellet(Form):
     proton_t0 = FormField(T0)
     sperm_cell_count = IntegerField(label="Sperm cell count", validators=[Optional()])
     non_sperm_count = IntegerField(label="Non-sperm count", validators=[Optional()])
-    suspected_leukocytes = IntegerField(label="Suspected leukocytes", validators=[Optional()])
     suspected_sperm_heads = IntegerField(label="Suspected sperm heads", validators=[Optional()])
     suspected_epithelial_cells = IntegerField(label="Suspected epithelial cells", validators=[Optional()])
     proton = FormField(Scan, "Proton Scan")
