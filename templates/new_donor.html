@@ -70,6 +70,7 @@
 {% macro scan(item) %}
 
 {{ wtf.form_field(item.scan_type)}}
+{{ two_col(item.in_water_bath_time, item.out_water_bath_time) }}
 {{ two_col(item.start_time, item.end_time) }}
 <h4>T_end</h4>
 <h5>Wash Motility</h5>
