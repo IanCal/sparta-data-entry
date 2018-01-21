@@ -189,6 +189,8 @@ class Scan(Duration):
                                                     ('additional_substrate_2', 'Additional substrate 2'),
                                                     ('additional_substrate_3', 'Additional substrate 3'),
                                                  ])
+    in_water_bath_time = DateTimeField('Time put in water bath',format='%d/%m/%Y %H:%M', validators=[Optional()])
+    out_water_bath_time = DateTimeField('Time taken out of water bath',format='%d/%m/%Y %H:%M', validators=[Optional()])
     tend = FormField(Tend)
     zip_file = FileField('Zip File')
     scan_number = TextField('Scan number in file')
